@@ -6,4 +6,6 @@
     <string name="main_activity_title">Checkers</string>
     <string name="menu_image_description">Checkers board in initial setup</string>
     <string name="player_name_hint">Player Name</string>
+    <string name="missing_name_error">Player name is required!</string>
+    <string name="duplicate_name_error">Player names must be different!</string>
 </resources>

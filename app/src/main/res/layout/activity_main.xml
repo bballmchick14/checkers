@@ -10,7 +10,7 @@
     tools:context=".MainActivity">
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/menuTitle"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -19,14 +19,15 @@
         android:textSize="50sp" />
 
     <ImageView
-        android:id="@+id/imageView3"
+        android:id="@+id/menuImage"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="5"
+        android:contentDescription="@string/menu_image_description"
         app:srcCompat="@drawable/menu_image" />
 
     <LinearLayout
-        android:id="@+id/linearLayout2"
+        android:id="@+id/greenPlayerNameLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -34,22 +35,23 @@
         android:orientation="horizontal">
 
         <TextView
-            android:id="@+id/textView5"
+            android:id="@+id/greenPlayerNameLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/green_player_name" />
 
         <EditText
-            android:id="@+id/editTextTextPersonName3"
+            android:id="@+id/greenPlayerNameField"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="@string/player_name_hint"
-            android:inputType="textPersonName" />
+            android:inputType="textPersonName"
+            android:importantForAutofill="no" />
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/linearLayout"
+        android:id="@+id/whitePlayerNameLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -57,31 +59,34 @@
         android:orientation="horizontal">
 
         <TextView
-            android:id="@+id/textView6"
+            android:id="@+id/whitePlayerNameLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/white_player_name" />
 
         <EditText
-            android:id="@+id/editTextTextPersonName4"
+            android:id="@+id/whitePlayerNameField"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ems="10"
             android:hint="@string/player_name_hint"
-            android:inputType="textPersonName" />
+            android:inputType="textPersonName"
+            android:importantForAutofill="no" />
 
     </LinearLayout>
 
     <FrameLayout
+        android:id="@+id/startButtonLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
 
         <Button
-            android:id="@+id/button3"
+            android:id="@+id/startButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:onClick="onStartGame"
             android:text="@string/start_button" />
     </FrameLayout>
 

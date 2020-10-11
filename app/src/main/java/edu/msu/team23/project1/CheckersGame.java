@@ -2,6 +2,7 @@ package edu.msu.team23.project1;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.os.Bundle;
@@ -10,32 +11,23 @@ import android.view.View;
 
 public class CheckersGame {
     /**
-     * Enumeration for the players in the game
-     */
-    private enum Player {
-        PLAYER_1,
-        PLAYER_2
-    }
-
-    /**
      * Enumeration for the teams in the game
      */
     enum Team {
-        LIGHT,
-        DARK
+        WHITE,
+        GREEN
     }
 
     /**
      * Image of the checker board
      */
-    // TODO Set this to the actual image file
-    private static final Bitmap BOARD_IMAGE = null;
+    private final Bitmap BOARD_IMAGE;
 
     /**
      * Percentage of the display width or height that
      * is occupied by the checkers game
      */
-    private static float SCALE_IN_VIEW = 0.9f;
+    private static float SCALE_IN_VIEW = 1f;
 
     /**
      * Bundle key for storing the checkers pieces
@@ -50,42 +42,22 @@ public class CheckersGame {
     /**
      * Name of player 1
      */
-    private String player1;
+    private String greenPlayer;
 
     /**
      * Name of player 2
      */
-    private String player2;
+    private String whitePlayer;
 
     /**
      * Name of the player whose turn it is.
      */
-    private String playerTurn;
+    private Team teamTurn;
 
     /**
      * Representation of the game board. an object will appear if
      */
     private CheckersPiece[][] board;
-
-    /**
-     * Size of the board in pixels
-     */
-    private int boardSize;
-
-    /**
-     * How much we scale the checkers pieces
-     */
-    private float scaleFactor;
-
-    /**
-     * Left margin in pixels
-     */
-    private int marginX;
-
-    /**
-     * Yop margin in pixels
-     */
-    private int marginY;
 
     /**
      * The checkers piece being dragged. If we are not dragging, the variable is null
@@ -102,13 +74,19 @@ public class CheckersGame {
      */
     private float lastRelY;
 
+    private Bitmap test;
+
     /**
      * Constructor foe the CheckersGame class
      * @param context Application context
      * @param view View this game is a part of
      */
-    public CheckersGame(Context context, CheckersView view) {
-
+    public CheckersGame(Context context, CheckersView view, String greenPlayer, String whitePlayer) {
+        BOARD_IMAGE = BitmapFactory.decodeResource(context.getResources(), R.drawable.board);
+        this.greenPlayer = greenPlayer;
+        this.whitePlayer = whitePlayer;
+        this.view = view;
+        reset(context);
     }
 
     /**
@@ -116,7 +94,32 @@ public class CheckersGame {
      * @param canvas Canvas to draw on
      */
     public void draw(Canvas canvas) {
+        int wid = canvas.getWidth();
+        int hit = canvas.getHeight();
 
+        // Determine the size of the board
+        int minDim = Math.min(wid, hit);
+        int boardSize = (int)(minDim * SCALE_IN_VIEW);
+
+        // Determine where to draw the board and how much to scale it
+        Point boardOrigin = new Point(((wid / 2) - boardSize / 2), ((hit / 2) - boardSize / 2));
+        float boardScaleFactor = (float)boardSize / (float)BOARD_IMAGE.getWidth();
+
+        // Draw the board
+        canvas.save();
+        canvas.translate(boardOrigin.x, boardOrigin.y);
+        canvas.scale(boardScaleFactor, boardScaleFactor);
+        canvas.drawBitmap(BOARD_IMAGE, 0, 0, null);
+        canvas.restore();
+
+        // Draw the pieces
+        for (int x = 0; x < board.length; x++) {
+            for (int y = 0; y < board[x].length; y++) {
+                if (board[x][y] != null) {
+                    board[x][y].draw(canvas, boardOrigin, boardSize, new Point(x, y));
+                }
+            }
+        }
     }
 
     /**
@@ -202,5 +205,31 @@ public class CheckersGame {
      */
     private static boolean isValidMove(Point beginSpace, Point endSpace) {
         return false;
+    }
+
+    /**
+     * Reset the game to its initial state
+     */
+    public void reset(Context context) {
+        board = new CheckersPiece[][]{
+                {null, new CheckersPiece(context, Team.WHITE), null, null, null, new CheckersPiece(context, Team.GREEN), null, new CheckersPiece(context, Team.GREEN)},
+                {new CheckersPiece(context, Team.WHITE), null, new CheckersPiece(context, Team.WHITE), null, null, null, new CheckersPiece(context, Team.GREEN), null},
+                {null, new CheckersPiece(context, Team.WHITE), null, null, null, new CheckersPiece(context, Team.GREEN), null, new CheckersPiece(context, Team.GREEN)},
+                {new CheckersPiece(context, Team.WHITE), null, new CheckersPiece(context, Team.WHITE), null, null, null, new CheckersPiece(context, Team.GREEN), null},
+                {null, new CheckersPiece(context, Team.WHITE), null, null, null, new CheckersPiece(context, Team.GREEN), null, new CheckersPiece(context, Team.GREEN)},
+                {new CheckersPiece(context, Team.WHITE), null, new CheckersPiece(context, Team.WHITE), null, null, null, new CheckersPiece(context, Team.GREEN), null},
+                {null, new CheckersPiece(context, Team.WHITE), null, null, null, new CheckersPiece(context, Team.GREEN), null, new CheckersPiece(context, Team.GREEN)},
+                {new CheckersPiece(context, Team.WHITE), null, new CheckersPiece(context, Team.WHITE), null, null, null, new CheckersPiece(context, Team.GREEN), null}
+        };
+
+        teamTurn = Team.GREEN;
+        setTurnView();
+    }
+
+    /**
+     * Change the display to say who's turn it is
+     */
+    private void setTurnView() {
+
     }
 }

@@ -7,7 +7,6 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
-
 /**
  * Custom view class for our Puzzle.
  */
@@ -33,12 +32,13 @@ public class CheckersView extends View {
     }
 
     private void init(AttributeSet attrs, int defStyle) {
-
+        checkersGame = new CheckersGame(getContext(), this, "testGreen", "testWhite");
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        checkersGame.draw(canvas);
     }
 
     @Override
@@ -62,7 +62,11 @@ public class CheckersView extends View {
 
     }
 
-    public CheckersGame getPuzzle() {
+    /**
+     * Get the checkers game associated with this view
+     * @return The checkers game associated with this view
+     */
+    public CheckersGame getCheckersGame() {
         return null;
     }
 }

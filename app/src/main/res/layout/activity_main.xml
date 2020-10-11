@@ -16,7 +16,7 @@
         android:layout_weight="1"
         android:gravity="center"
         android:text="@string/main_activity_title"
-        android:textSize="50sp" />
+        android:textSize="36sp" />
 
     <ImageView
         android:id="@+id/menuImage"

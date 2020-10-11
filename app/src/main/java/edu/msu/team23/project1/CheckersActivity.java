@@ -19,7 +19,6 @@ public class CheckersActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(Bundle bundle) {
         super.onSaveInstanceState(bundle);
-        getCheckersView().saveInstanceState(bundle);
     }
 
     /**

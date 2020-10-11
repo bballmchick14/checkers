@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Determine if the entried in the fields on the main activity are valid
+     * Determine if the entries in the fields on the main activity are valid
      * @return True if the entries in the fields on the main activity are valid
      */
     private boolean areFieldsValid() {

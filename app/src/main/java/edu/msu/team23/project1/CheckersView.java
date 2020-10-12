@@ -1,6 +1,8 @@
 package edu.msu.team23.project1;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.os.Bundle;
 import android.util.AttributeSet;
@@ -18,21 +20,22 @@ public class CheckersView extends View {
 
     public CheckersView(Context context) {
         super(context);
-        init(null, 0);
+        init(context);
     }
 
     public CheckersView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init(attrs, 0);
+        init(context);
     }
 
     public CheckersView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        init(attrs, defStyle);
+        init(context);
     }
 
-    private void init(AttributeSet attrs, int defStyle) {
-        checkersGame = new CheckersGame(getContext(), this, "testGreen", "testWhite");
+    private void init(Context context) {
+        Intent intent = ((Activity)context).getIntent();
+        checkersGame = new CheckersGame(getContext(), this, intent.getStringExtra(MainActivity.GREEN_PLAYER), intent.getStringExtra(MainActivity.WHITE_PLAYER));
     }
 
     @Override
@@ -68,5 +71,13 @@ public class CheckersView extends View {
      */
     public CheckersGame getCheckersGame() {
         return null;
+    }
+
+    public void externalSetup(Context context) {
+        checkersGame.externalSetup(context);
+    }
+
+    public void onDone(Context context) {
+        checkersGame.nextTurn(context);
     }
 }

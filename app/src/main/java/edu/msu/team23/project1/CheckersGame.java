@@ -1,5 +1,6 @@
 package edu.msu.team23.project1;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -8,6 +9,9 @@ import android.graphics.Point;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.TextView;
+
+import java.text.MessageFormat;
 
 public class CheckersGame {
     /**
@@ -24,15 +28,12 @@ public class CheckersGame {
     private final Bitmap BOARD_IMAGE;
 
     /**
-     * Percentage of the display width or height that
-     * is occupied by the checkers game
-     */
-    private static float SCALE_IN_VIEW = 1f;
-
-    /**
-     * Bundle key for storing the checkers pieces
+     * Bundle keys for saving and loading state
      */
     private static final String CHECKERS_PIECES = "CheckersGame.checkersPieces";
+    private static final String GREEN_PLAYER = "CheckersGame.greenPlayer";
+    private static final String WHITE_PLAYER = "CheckersGame.whitePlayer";
+    private static final String TEAM_TURN = "CheckersGame.teamTurn";
 
     /**
      * View this checkers game is in
@@ -74,8 +75,6 @@ public class CheckersGame {
      */
     private float lastRelY;
 
-    private Bitmap test;
-
     /**
      * Constructor foe the CheckersGame class
      * @param context Application context
@@ -98,8 +97,7 @@ public class CheckersGame {
         int hit = canvas.getHeight();
 
         // Determine the size of the board
-        int minDim = Math.min(wid, hit);
-        int boardSize = (int)(minDim * SCALE_IN_VIEW);
+        int boardSize = Math.min(wid, hit);
 
         // Determine where to draw the board and how much to scale it
         Point boardOrigin = new Point(((wid / 2) - boardSize / 2), ((hit / 2) - boardSize / 2));
@@ -156,8 +154,9 @@ public class CheckersGame {
     /**
      * Handles advancing to the next player's turn
      */
-    public void nextTurn() {
-
+    public void nextTurn(Context context) {
+        teamTurn = teamTurn == Team.GREEN ? Team.WHITE : Team.GREEN;
+        setTurnView(context, teamTurn);
     }
 
     /**
@@ -211,6 +210,7 @@ public class CheckersGame {
      * Reset the game to its initial state
      */
     public void reset(Context context) {
+        teamTurn = Team.GREEN;
         board = new CheckersPiece[][]{
                 {null, new CheckersPiece(context, Team.WHITE), null, null, null, new CheckersPiece(context, Team.GREEN), null, new CheckersPiece(context, Team.GREEN)},
                 {new CheckersPiece(context, Team.WHITE), null, new CheckersPiece(context, Team.WHITE), null, null, null, new CheckersPiece(context, Team.GREEN), null},
@@ -221,15 +221,17 @@ public class CheckersGame {
                 {null, new CheckersPiece(context, Team.WHITE), null, null, null, new CheckersPiece(context, Team.GREEN), null, new CheckersPiece(context, Team.GREEN)},
                 {new CheckersPiece(context, Team.WHITE), null, new CheckersPiece(context, Team.WHITE), null, null, null, new CheckersPiece(context, Team.GREEN), null}
         };
+    }
 
-        teamTurn = Team.GREEN;
-        setTurnView();
+    public void externalSetup(Context context) {
+        setTurnView(context, Team.GREEN);
     }
 
     /**
      * Change the display to say who's turn it is
      */
-    private void setTurnView() {
-
+    private void setTurnView(Context context, Team team) {
+        TextView turnView = (TextView)((Activity) context).findViewById(R.id.turnView);
+        turnView.setText(MessageFormat.format("{0}{1}", team == Team.GREEN ? greenPlayer : whitePlayer, context.getResources().getString(R.string.turn_suffix)));
     }
 }

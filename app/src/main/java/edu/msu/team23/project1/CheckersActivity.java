@@ -2,7 +2,9 @@ package edu.msu.team23.project1;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 
 public class CheckersActivity extends AppCompatActivity {
 
@@ -10,6 +12,8 @@ public class CheckersActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_checkers);
+        Intent intent = getIntent();
+        getCheckersView().externalSetup(this);
     }
 
     /**
@@ -26,6 +30,10 @@ public class CheckersActivity extends AppCompatActivity {
      * @return CheckersView reference
      */
     private CheckersView getCheckersView() {
-        return null;
+        return (CheckersView)findViewById(R.id.checkersView);
+    }
+
+    public void onDone(View view) {
+        getCheckersView().onDone(this);
     }
 }

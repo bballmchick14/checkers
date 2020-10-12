@@ -42,6 +42,7 @@
             android:id="@+id/doneButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:onClick="onDone"
             android:text="@string/done"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/resignButton"

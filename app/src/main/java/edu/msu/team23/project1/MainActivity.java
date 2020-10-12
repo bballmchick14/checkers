@@ -8,6 +8,8 @@ import android.view.View;
 import android.widget.EditText;
 
 public class MainActivity extends AppCompatActivity {
+    public static final String GREEN_PLAYER = "GREEN_PLAYER";
+    public static final String WHITE_PLAYER = "WHITE_PLAYER";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,8 +22,13 @@ public class MainActivity extends AppCompatActivity {
      * @param view View the event happened on
      */
     public void onStartGame(View view) {
-        if (areFieldsValid()) {
+        EditText greenPlayer = findViewById(R.id.greenPlayerNameField);
+        EditText whitePlayer = findViewById(R.id.whitePlayerNameField);
+
+        if (areFieldsValid(greenPlayer, whitePlayer)) {
             Intent intent = new Intent(this, CheckersActivity.class);
+            intent.putExtra(GREEN_PLAYER, greenPlayer.getText().toString());
+            intent.putExtra(WHITE_PLAYER, whitePlayer.getText().toString());
             startActivity(intent);
         }
     }
@@ -30,11 +37,8 @@ public class MainActivity extends AppCompatActivity {
      * Determine if the entries in the fields on the main activity are valid
      * @return True if the entries in the fields on the main activity are valid
      */
-    private boolean areFieldsValid() {
+    private boolean areFieldsValid(EditText greenPlayer, EditText whitePlayer) {
         boolean validFields = true;
-
-        EditText greenPlayer = findViewById(R.id.greenPlayerNameField);
-        EditText whitePlayer = findViewById(R.id.whitePlayerNameField);
 
         if (greenPlayer != null && whitePlayer != null) {
             if (greenPlayer.getText().toString().length() == 0) {

@@ -27,7 +27,7 @@
         app:srcCompat="@drawable/menu_image" />
 
     <LinearLayout
-        android:id="@+id/greenPlayerNameLayout"
+        android:id="@+id/whitePlayerNameLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -51,7 +51,7 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/whitePlayerNameLayout"
+        android:id="@+id/greenPlayerNameLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"

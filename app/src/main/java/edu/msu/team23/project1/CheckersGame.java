@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Point;
+import android.graphics.PointF;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
@@ -28,6 +29,11 @@ public class CheckersGame {
     private final Bitmap BOARD_IMAGE;
 
     /**
+     * Number of spaces on a side of the board
+     */
+    private static final int SPACE_WIDTH = 8;
+
+    /**
      * Bundle keys for saving and loading state
      */
     private static final String CHECKERS_PIECES = "CheckersGame.checkersPieces";
@@ -41,12 +47,12 @@ public class CheckersGame {
     private CheckersView view;
 
     /**
-     * Name of player 1
+     * Name of the player on the green team
      */
     private String greenPlayer;
 
     /**
-     * Name of player 2
+     * Name of the player on the white team
      */
     private String whitePlayer;
 
@@ -56,14 +62,19 @@ public class CheckersGame {
     private Team teamTurn;
 
     /**
-     * Representation of the game board. an object will appear if
+     * Representation of the game board.
      */
     private CheckersPiece[][] board;
 
     /**
      * The checkers piece being dragged. If we are not dragging, the variable is null
      */
-    private CheckersPiece dragging = null;
+    private CheckersPiece draggingPiece = null;
+
+    /**
+     * The space the dragging piece came from, if there is no dragging piece, the variable will be null
+     */
+    private Point draggingSpace = null;
 
     /**
      * Most recent relative X touch when dragging
@@ -76,9 +87,16 @@ public class CheckersGame {
     private float lastRelY;
 
     /**
+     * Size of the board in pixels
+     */
+    private int boardSize;
+
+    /**
      * Constructor foe the CheckersGame class
      * @param context Application context
      * @param view View this game is a part of
+     * @param greenPlayer Name of the player on the green team
+     * @param whitePlayer Name of the player on the white team
      */
     public CheckersGame(Context context, CheckersView view, String greenPlayer, String whitePlayer) {
         BOARD_IMAGE = BitmapFactory.decodeResource(context.getResources(), R.drawable.board);
@@ -93,30 +111,30 @@ public class CheckersGame {
      * @param canvas Canvas to draw on
      */
     public void draw(Canvas canvas) {
-        int wid = canvas.getWidth();
-        int hit = canvas.getHeight();
-
         // Determine the size of the board
-        int boardSize = Math.min(wid, hit);
+        boardSize = canvas.getWidth();
 
         // Determine where to draw the board and how much to scale it
-        Point boardOrigin = new Point(((wid / 2) - boardSize / 2), ((hit / 2) - boardSize / 2));
         float boardScaleFactor = (float)boardSize / (float)BOARD_IMAGE.getWidth();
 
         // Draw the board
         canvas.save();
-        canvas.translate(boardOrigin.x, boardOrigin.y);
         canvas.scale(boardScaleFactor, boardScaleFactor);
         canvas.drawBitmap(BOARD_IMAGE, 0, 0, null);
         canvas.restore();
 
         // Draw the pieces
-        for (int x = 0; x < board.length; x++) {
-            for (int y = 0; y < board[x].length; y++) {
-                if (board[x][y] != null) {
-                    board[x][y].draw(canvas, boardOrigin, boardSize, new Point(x, y));
+        for (int col = 0; col < board.length; col++) {
+            for (int row = 0; row < board[col].length; row++) {
+                if (board[row][col] != null) {
+                    board[row][col].draw(canvas, boardSize);
                 }
             }
+        }
+
+        // Draw the dragging piece again so it will appear on top
+        if (draggingPiece != null) {
+            draggingPiece.draw(canvas, boardSize);
         }
     }
 
@@ -127,6 +145,19 @@ public class CheckersGame {
      * @return true if the touch is handled.
      */
     public boolean onTouchEvent(View view, MotionEvent event) {
+        // Convert an x,y location to a relative location on the board
+        float relX = event.getX() / boardSize;
+        float relY = event.getY() / boardSize;
+
+        switch(event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                return onTouched(view, relX, relY);
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+                return onReleased(view, relX, relY);
+            case MotionEvent.ACTION_MOVE:
+                return onMove(view, relX, relY);
+        }
         return false;
     }
 
@@ -138,6 +169,17 @@ public class CheckersGame {
      * @return true if the touch is handled
      */
     private boolean onTouched(View view, float x, float y) {
+        for (int row = 0; row < board.length; row++) {
+            for (int col = 0; col < board[row].length; col++) {
+                if (board[row][col] != null && board[row][col].getTeam() == teamTurn && board[row][col].hit(x, y, boardSize)) {
+                    draggingPiece = board[row][col];
+                    draggingSpace = new Point(row, col);
+                    lastRelX = x;
+                    lastRelY = y;
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -148,7 +190,77 @@ public class CheckersGame {
      * @return true if the touch is handled
      */
     private boolean onReleased(View view, float x, float y) {
+        if (draggingPiece != null) {
+            draggingPiece = null;
+            draggingSpace = null;
+            return true;
+        }
         return false;
+    }
+
+    /**
+     * Handle a move message.
+     * @param relX Most recent relative X touch when dragging
+     * @param relY Most recent relative Y touch when dragging
+     * @return true if the touch is handled
+     */
+    private boolean onMove(View view, float relX, float relY) {
+        if(draggingPiece != null) {
+            //
+            // Gather values for below calculations
+            //
+            // Image of the piece
+            Bitmap image = draggingPiece.getImage();
+            // Scale factor of the piece
+            float scaleFactor = (float)boardSize / (float)image.getWidth() / 8;
+            // Size of half od the piece in pixels
+            int halfPieceSize = (int)(draggingPiece.getImage().getWidth() * scaleFactor / 2);
+            // Relative position of the piece
+            PointF pieceRelPos = draggingPiece.getRelPos();
+            // Proposed new relative X position from the move
+            int pendingNewX = (int)((pieceRelPos.x + (relX - lastRelX)) * boardSize);
+            // Proposed new relative Y position from the move
+            int pendingNewY = (int)((pieceRelPos.y + (relY - lastRelY)) * boardSize);
+
+            float dx; // Relative distance to move in the X
+            float dy; // Relative distance to move in the Y
+
+            //
+            // Determine if the proposed move will move the piece off the board in X and Y directions.
+            // If it will go off the board, don't let it, otherwise move as normal.
+            //
+            if (pendingNewX - halfPieceSize < 0) {
+                dx = 0;
+                lastRelX = (0f + halfPieceSize) / boardSize;
+                draggingPiece.setPosition(lastRelX, pieceRelPos.y);
+            } else if (pendingNewX + halfPieceSize > boardSize) {
+                dx = 0;
+                lastRelX = (float)(boardSize - halfPieceSize) / boardSize;
+                draggingPiece.setPosition(lastRelX, pieceRelPos.y);
+            } else {
+                dx = relX - lastRelX;
+            }
+
+            if (pendingNewY - halfPieceSize < 0) {
+                dy = 0;
+                lastRelY = (0f + halfPieceSize) / boardSize;
+                draggingPiece.setPosition(pieceRelPos.x, lastRelY);
+            } else if (pendingNewY + halfPieceSize > boardSize) {
+                dy = 0;
+                lastRelY = (float)(boardSize - halfPieceSize) / boardSize;
+                draggingPiece.setPosition(pieceRelPos.x, lastRelY);
+            } else {
+                dy = relY - lastRelY;
+            }
+
+            draggingPiece.move(dx, dy);
+            lastRelX = dx == 0 ? lastRelX : relX;
+            lastRelY = dy == 0 ? lastRelY : relY;
+            view.invalidate();
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -210,19 +322,29 @@ public class CheckersGame {
      * Reset the game to its initial state
      */
     public void reset(Context context) {
+        // Set the turn
         teamTurn = Team.GREEN;
+
+        // Set the spaces of all the pieces
         board = new CheckersPiece[][]{
-                {null, new CheckersPiece(context, Team.WHITE), null, null, null, new CheckersPiece(context, Team.GREEN), null, new CheckersPiece(context, Team.GREEN)},
-                {new CheckersPiece(context, Team.WHITE), null, new CheckersPiece(context, Team.WHITE), null, null, null, new CheckersPiece(context, Team.GREEN), null},
-                {null, new CheckersPiece(context, Team.WHITE), null, null, null, new CheckersPiece(context, Team.GREEN), null, new CheckersPiece(context, Team.GREEN)},
-                {new CheckersPiece(context, Team.WHITE), null, new CheckersPiece(context, Team.WHITE), null, null, null, new CheckersPiece(context, Team.GREEN), null},
-                {null, new CheckersPiece(context, Team.WHITE), null, null, null, new CheckersPiece(context, Team.GREEN), null, new CheckersPiece(context, Team.GREEN)},
-                {new CheckersPiece(context, Team.WHITE), null, new CheckersPiece(context, Team.WHITE), null, null, null, new CheckersPiece(context, Team.GREEN), null},
-                {null, new CheckersPiece(context, Team.WHITE), null, null, null, new CheckersPiece(context, Team.GREEN), null, new CheckersPiece(context, Team.GREEN)},
-                {new CheckersPiece(context, Team.WHITE), null, new CheckersPiece(context, Team.WHITE), null, null, null, new CheckersPiece(context, Team.GREEN), null}
+                {null, new CheckersPiece(context, Team.WHITE), null, new CheckersPiece(context, Team.WHITE), null, new CheckersPiece(context, Team.WHITE), null, new CheckersPiece(context, Team.WHITE)},
+                {new CheckersPiece(context, Team.WHITE), null, new CheckersPiece(context, Team.WHITE), null, new CheckersPiece(context, Team.WHITE), null, new CheckersPiece(context, Team.WHITE), null},
+                {null, new CheckersPiece(context, Team.WHITE), null, new CheckersPiece(context, Team.WHITE), null, new CheckersPiece(context, Team.WHITE), null, new CheckersPiece(context, Team.WHITE)},
+                {null, null, null, null, null, null, null, null},
+                {null, null, null, null, null, null, null, null},
+                {new CheckersPiece(context, Team.GREEN), null, new CheckersPiece(context, Team.GREEN), null, new CheckersPiece(context, Team.GREEN), null, new CheckersPiece(context, Team.GREEN), null},
+                {null, new CheckersPiece(context, Team.GREEN), null, new CheckersPiece(context, Team.GREEN), null, new CheckersPiece(context, Team.GREEN), null, new CheckersPiece(context, Team.GREEN)},
+                {new CheckersPiece(context, Team.GREEN), null, new CheckersPiece(context, Team.GREEN), null, new CheckersPiece(context, Team.GREEN), null, new CheckersPiece(context, Team.GREEN), null},
         };
+
+        // Set the actual piece positions on the screen
+        setPiecePositions();
     }
 
+    /**
+     * Setup for views outside this view
+     * @param context Context of this application
+     */
     public void externalSetup(Context context) {
         setTurnView(context, Team.GREEN);
     }
@@ -233,5 +355,31 @@ public class CheckersGame {
     private void setTurnView(Context context, Team team) {
         TextView turnView = (TextView)((Activity) context).findViewById(R.id.turnView);
         turnView.setText(MessageFormat.format("{0}{1}", team == Team.GREEN ? greenPlayer : whitePlayer, context.getResources().getString(R.string.turn_suffix)));
+    }
+
+    /**
+     * Update the relative position of all the pieces based on their space
+     */
+    private void setPiecePositions() {
+        for (int col = 0; col < board.length; col ++) {
+            for (int row = 0; row < board[col].length; row++) {
+                if (board[row][col] != null) {
+                    PointF pos = spaceToPos(row, col);
+                    board[row][col].setPosition(pos.x, pos.y);
+                }
+            }
+        }
+    }
+
+    /**
+     * Generate a relative position on the screen based on the space the piece is in
+     * @param row Row of the space
+     * @param col Column of the space
+     * @return relative position of the piece
+     */
+    private PointF spaceToPos(int row, int col) {
+        float toCenterOfSpace = (1f/SPACE_WIDTH/2);
+        float toNextSpace = (1f/SPACE_WIDTH);
+        return new PointF(toCenterOfSpace + (toNextSpace * col), toCenterOfSpace + (toNextSpace * row));
     }
 }

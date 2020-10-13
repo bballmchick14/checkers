@@ -5,25 +5,26 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Point;
+import android.graphics.PointF;
 
-import java.util.EnumMap;
+import java.io.Serializable;
 
-public class CheckersPiece {
+public class CheckersPiece implements Serializable {
     /**
      * Enumeration for all the different images that can be used to display a piece
      */
-    private enum PieceImage {
-        WHITE_MAN,
-        WHITE_KING,
-        GREEN_MAN,
-        GREEN_KING
-    }
+    public enum PieceImage implements Serializable {
+        WHITE_MAN(R.drawable.white_man),
+        WHITE_KING(R.drawable.white_king),
+        GREEN_MAN(R.drawable.green_man),
+        GREEN_KING(R.drawable.green_king);
 
-    /**
-     * Map of IDs to images for each way a piece can be displayed
-     * LIGHT_MAN, LIGHT_KING, DARK_MAN, DARK_KING
-     */
-    private static final EnumMap<PieceImage, Bitmap> PIECE_IMAGES = new EnumMap<>(PieceImage.class);
+        public final int IMAGE_ID;
+
+        PieceImage(int imageId) {
+            IMAGE_ID = imageId;
+        }
+    }
 
     /**
      * Distance away from the center of a space to be allowed to snap
@@ -33,17 +34,22 @@ public class CheckersPiece {
     /**
      * Image used to display the piece
      */
-    private PieceImage pieceImage;
-
-    /**
-     * ID of the piece (negative numbers are light, positive numbers are dark)
-     */
-    private int id;
+    private CheckersGame.Team team;
 
     /**
      * Is this piece a king?
      */
     private boolean isKing = false;
+
+    /**
+     * Designator for the image this piece should have
+     */
+    private PieceImage imageKey;
+
+    /**
+     * Image this piece has
+     */
+    private transient Bitmap image;
 
     /**
      * x location.
@@ -63,37 +69,25 @@ public class CheckersPiece {
      * @param team Team the piece is on
      */
     public CheckersPiece(Context context, CheckersGame.Team team) {
-        PIECE_IMAGES.put(PieceImage.WHITE_MAN, BitmapFactory.decodeResource(context.getResources(), R.drawable.spartan_white));
-        PIECE_IMAGES.put(PieceImage.WHITE_KING, BitmapFactory.decodeResource(context.getResources(), R.drawable.king_white));
-        PIECE_IMAGES.put(PieceImage.GREEN_MAN, BitmapFactory.decodeResource(context.getResources(), R.drawable.spartan_green));
-        PIECE_IMAGES.put(PieceImage.GREEN_KING, BitmapFactory.decodeResource(context.getResources(), R.drawable.king_green));
-
-        if (team == CheckersGame.Team.WHITE) {
-            pieceImage = PieceImage.WHITE_MAN;
-        } else {
-            pieceImage = PieceImage.GREEN_MAN;
-        }
+        this.team = team;
+        updateImage(context);
     }
 
     /**
      * Draw the checkers piece
      * @param canvas Canvas to draw on
-     * @param origin origin of the board
      * @param boardSize size of the board
-     * @param space space the piece is in
      */
-    public void draw(Canvas canvas, Point origin, int boardSize, Point space) {
-        // Get this pieces image
-        Bitmap image = PIECE_IMAGES.get(pieceImage);
-
+    public void draw(Canvas canvas, int boardSize) {
         if (image != null) {
             // Determine scale factor
             float scaleFactor = (float)boardSize / (float)image.getWidth() / 8;
 
             // Draw image in the correct space
             canvas.save();
-            canvas.translate(origin.x + ((boardSize / 8f) * space.x), origin.y + (boardSize / 8f * space.y));
+            canvas.translate(x * boardSize, y * boardSize);
             canvas.scale(scaleFactor, scaleFactor);
+            canvas.translate(-image.getWidth() / 2f, -image.getHeight() / 2f);
             canvas.drawBitmap(image, 0, 0, null);
             canvas.restore();
         }
@@ -103,12 +97,22 @@ public class CheckersPiece {
      * Test to see if we have touched a checkers piece
      * @param testX X location as a normalized coordinate (0 to 1)
      * @param testY Y location as a normalized coordinate (0 to 1)
-     * @param puzzleSize the size of the puzzle in pixels
-     * @param scaleFactor the amount to scale a piece by
+     * @param boardSize the size of the puzzle in pixels
      * @return true if we hit the piece
      */
-    public boolean hit(float testX, float testY, int puzzleSize, float scaleFactor) {
-        return false;
+    public boolean hit(float testX, float testY, int boardSize) {
+        // Make relative to the location and size to the piece size
+        float scaleFactor = (float)boardSize / (float)image.getWidth() / 8;
+        int pX = (int)((testX - x) * boardSize / scaleFactor) + image.getWidth() / 2;
+        int pY = (int)((testY - y) * boardSize / scaleFactor) + image.getHeight() / 2;
+
+        if(pX < 0 || pX >= image.getWidth() || pY < 0 || pY >= image.getHeight()) {
+            return false;
+        }
+
+        // We are within the rectangle of the piece.
+        // Are we touching actual picture?
+        return (image.getPixel(pX, pY) & 0xff000000) != 0;
     }
 
     /**
@@ -117,7 +121,8 @@ public class CheckersPiece {
      * @param dy y amount to move
      */
     public void move(float dx, float dy) {
-
+        x += dx;
+        y += dy;
     }
 
     /**
@@ -126,6 +131,61 @@ public class CheckersPiece {
      * @param y New y position of the piece
      */
     public void setPosition(float x, float y) {
+        this.x = x;
+        this.y = y;
+    }
 
+    /**
+     * Toggle this pieces king status
+     * @param context Context of the application
+     */
+    public void toggleKing(Context context) {
+        isKing = !isKing;
+        updateImage(context);
+    }
+
+    /**
+     * Update this pieces image based on its team and king status
+     * @param context context of this application
+     */
+    private void updateImage(Context context) {
+        if (team == CheckersGame.Team.GREEN) {
+            if (isKing) {
+                imageKey = PieceImage.GREEN_KING;
+            } else {
+                imageKey = PieceImage.GREEN_MAN;
+            }
+        } else {
+            if (isKing) {
+                imageKey = PieceImage.WHITE_KING;
+            } else {
+                imageKey = PieceImage.WHITE_MAN;
+            }
+        }
+        image = BitmapFactory.decodeResource(context.getResources(), imageKey.IMAGE_ID);
+    }
+
+    /**
+     * Getter for the image of this piece
+     * @return The image of this piece
+     */
+    public Bitmap getImage() {
+        return image;
+    }
+
+    /**
+     * Getter for this piece's position
+     * @return This piece's position
+     */
+    public PointF getRelPos() {
+        return new PointF(x, y);
+    }
+
+    /**
+     * Getter for this piece's team
+     * @return This pieces team
+     */
+    public CheckersGame.Team getTeam() {
+        return team;
     }
 }

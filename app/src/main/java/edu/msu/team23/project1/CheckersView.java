@@ -33,6 +33,10 @@ public class CheckersView extends View {
         init(context);
     }
 
+    /**
+     * Initialize the view
+     * @param context Context of this application
+     */
     private void init(Context context) {
         Intent intent = ((Activity)context).getIntent();
         checkersGame = new CheckersGame(getContext(), this, intent.getStringExtra(MainActivity.GREEN_PLAYER), intent.getStringExtra(MainActivity.WHITE_PLAYER));
@@ -46,7 +50,7 @@ public class CheckersView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        return false;
+        return checkersGame.onTouchEvent(this, event);
     }
 
     /**
@@ -70,7 +74,7 @@ public class CheckersView extends View {
      * @return The checkers game associated with this view
      */
     public CheckersGame getCheckersGame() {
-        return null;
+        return checkersGame;
     }
 
     public void externalSetup(Context context) {

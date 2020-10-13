@@ -77,11 +77,15 @@ public class CheckersView extends View {
         return checkersGame;
     }
 
-    public void externalSetup(Context context) {
-        checkersGame.externalSetup(context);
+    public void externalSetup() {
+        checkersGame.externalSetup();
     }
 
-    public void onDone(Context context) {
-        checkersGame.nextTurn(context);
+    public void onDone() {
+        checkersGame.nextTurn();
+    }
+
+    public void onResign() {
+        checkersGame.handleResign();
     }
 }

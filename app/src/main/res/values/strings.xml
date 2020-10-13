@@ -11,4 +11,8 @@
     <string name="done">Done</string>
     <string name="resign">Resign</string>
     <string name="turn_suffix">\'s Turn!</string>
+    <string name="must_move_title">Make a Move</string>
+    <string name="must_move_message">You must make a move before you end your turn!</string>
+    <string name="game_over_title">Game Over!</string>
+    <string name="game_over_suffix">wins!</string>
 </resources>

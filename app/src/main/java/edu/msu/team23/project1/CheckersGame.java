@@ -1,11 +1,11 @@
 package edu.msu.team23.project1;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Point;
 import android.graphics.PointF;
 import android.os.Bundle;
 import android.view.MotionEvent;
@@ -31,7 +31,12 @@ public class CheckersGame {
     /**
      * Number of spaces on a side of the board
      */
-    private static final int SPACE_WIDTH = 8;
+    private static final int SPACES_ON_SIDE = 8;
+
+    /**
+     * Relative width of a space
+     */
+    private static final float SPACE_WIDTH = 1f / SPACES_ON_SIDE;
 
     /**
      * Bundle keys for saving and loading state
@@ -74,7 +79,7 @@ public class CheckersGame {
     /**
      * The space the dragging piece came from, if there is no dragging piece, the variable will be null
      */
-    private Point draggingSpace = null;
+    private Space draggingSpace = null;
 
     /**
      * Most recent relative X touch when dragging
@@ -90,6 +95,16 @@ public class CheckersGame {
      * Size of the board in pixels
      */
     private int boardSize;
+
+    /**
+     * Piece that has moved this turn
+     */
+    private CheckersPiece hasMoved;
+
+    /**
+     * Is the game complete?
+     */
+    private boolean isComplete;
 
     /**
      * Constructor foe the CheckersGame class
@@ -149,6 +164,7 @@ public class CheckersGame {
         float relX = event.getX() / boardSize;
         float relY = event.getY() / boardSize;
 
+        // Delegate work to corresponding function
         switch(event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
                 return onTouched(view, relX, relY);
@@ -169,14 +185,16 @@ public class CheckersGame {
      * @return true if the touch is handled
      */
     private boolean onTouched(View view, float x, float y) {
-        for (int row = 0; row < board.length; row++) {
-            for (int col = 0; col < board[row].length; col++) {
-                if (board[row][col] != null && board[row][col].getTeam() == teamTurn && board[row][col].hit(x, y, boardSize)) {
-                    draggingPiece = board[row][col];
-                    draggingSpace = new Point(row, col);
-                    lastRelX = x;
-                    lastRelY = y;
-                    return true;
+        if (!isComplete) {
+            for (int row = 0; row < board.length; row++) {
+                for (int col = 0; col < board[row].length; col++) {
+                    if (board[row][col] != null && board[row][col].getTeam() == teamTurn && board[row][col].hit(x, y, boardSize)) {
+                        draggingPiece = board[row][col];
+                        draggingSpace = new Space(row, col);
+                        lastRelX = x;
+                        lastRelY = y;
+                        return true;
+                    }
                 }
             }
         }
@@ -191,8 +209,40 @@ public class CheckersGame {
      */
     private boolean onReleased(View view, float x, float y) {
         if (draggingPiece != null) {
-            draggingPiece = null;
-            draggingSpace = null;
+            Space closestSpace = closestSpace(x, y);
+            // Do the move if it is valid
+            if (isValidMove(draggingSpace, closestSpace, draggingPiece)) {
+                // Move the piece to the new space
+                board[closestSpace.getRow()][closestSpace.getCol()] = draggingPiece;
+                board[draggingSpace.getRow()][draggingSpace.getCol()] = null;
+
+                // Move the piece to the correct relative position
+                PointF snapPos = spaceToPos(closestSpace.getRow(), closestSpace.getCol());
+                draggingPiece.setPosition(snapPos.x, snapPos.y);
+
+                // If a piece was jumped, remove the jumped piece
+                if (Math.abs(closestSpace.getRow() - draggingSpace.getRow()) == 2) {
+                    board[(closestSpace.getRow() + draggingSpace.getRow()) / 2][(closestSpace.getCol() + draggingSpace.getCol()) / 2] = null;
+                }
+
+                // If the piece got to the end make it a king
+                if (draggingPiece.getTeam() == Team.GREEN && closestSpace.getRow() == 0
+                    || draggingPiece.getTeam() == Team.WHITE && closestSpace.getRow() == SPACES_ON_SIDE - 1) {
+                    draggingPiece.makeKing(view.getContext());
+                }
+
+                hasMoved = draggingPiece;
+            } else {
+                // Reset the piece's position to it's original space
+                returnPiece();
+            }
+            // Let go of the piece
+            releasePiece();
+
+            // End the game if a team won
+            handleWin(hasWon());
+
+            view.invalidate();
             return true;
         }
         return false;
@@ -264,19 +314,112 @@ public class CheckersGame {
     }
 
     /**
+     * Return the currently dragging piece to it's space before dragging
+     */
+    private void returnPiece() {
+        if (draggingPiece != null) {
+            PointF originalPos = spaceToPos(draggingSpace.getRow(), draggingSpace.getCol());
+            draggingPiece.setPosition(originalPos.x, originalPos.y);
+        }
+    }
+
+    /**
+     * Let go of the piece
+     */
+    private void releasePiece() {
+        draggingPiece = null;
+        draggingSpace = null;
+    }
+
+    /**
+     * Handle a team winning the game
+     * @param team The team that won the game
+     */
+    public void handleWin(Team team) {
+        if (team != null) {
+            isComplete = true;
+            returnPiece();
+            releasePiece();
+
+            setTurnViewWin(team);
+
+            //
+            // Dialog for
+            //
+            String winnerName = team == Team.GREEN ? greenPlayer : whitePlayer;
+            AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
+            // Parameterize the builder
+            builder.setTitle(R.string.game_over_title);
+            builder.setMessage(winnerName + " " + view.getContext().getResources().getString(R.string.game_over_suffix));
+            builder.setPositiveButton(android.R.string.ok, null);
+            // Create the dialog box and show it
+            AlertDialog alertDialog = builder.create();
+            alertDialog.show();
+        }
+    }
+
+    /**
+     * Handle a player resigning the game
+     */
+    public void handleResign() {
+        if (!isComplete) {
+            handleWin(teamTurn == Team.GREEN ? Team.WHITE : Team.GREEN);
+        }
+    }
+
+    /**
      * Handles advancing to the next player's turn
      */
-    public void nextTurn(Context context) {
-        teamTurn = teamTurn == Team.GREEN ? Team.WHITE : Team.GREEN;
-        setTurnView(context, teamTurn);
+    public void nextTurn() {
+        if (!isComplete) {
+            if (hasMoved != null) {
+                teamTurn = teamTurn == Team.GREEN ? Team.WHITE : Team.GREEN;
+                setTurnView(teamTurn);
+                hasMoved = null;
+            } else {
+                AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
+                // Parameterize the builder
+                builder.setTitle(R.string.must_move_title);
+                builder.setMessage(R.string.must_move_message);
+                builder.setPositiveButton(android.R.string.ok, null);
+                // Create the dialog box and show it
+                AlertDialog alertDialog = builder.create();
+                alertDialog.show();
+            }
+        }
     }
 
     /**
      * Determines if a player has won the game
-     * @return Name of a player if they have won the game, null otherwise
+     * @return Team that won, null otherwise
      */
-    public String hasWon() {
-        return null;
+    public Team hasWon() {
+        // Determine if each team has pieces still exist
+        boolean hasGreenPiece = false;
+        boolean hasWhitePiece = false;
+        for (CheckersPiece[] row : board) {
+            for (CheckersPiece piece : row) {
+                if (piece != null) {
+                    switch (piece.getTeam()) {
+                        case GREEN:
+                            hasGreenPiece = true;
+                            break;
+                        case WHITE:
+                            hasWhitePiece = true;
+                            break;
+                    }
+                }
+            }
+        }
+
+        // Designate the winning team
+        Team winningTeam = null;
+        if (!hasWhitePiece) {
+            winningTeam = Team.GREEN;
+        } else if (!hasGreenPiece) {
+            winningTeam = Team.WHITE;
+        }
+        return winningTeam;
     }
 
     /**
@@ -296,26 +439,46 @@ public class CheckersGame {
     }
 
     /**
-     * Determine which space a piece should snap to depending on it's position.
+     * Determine which space a piece is closest to
      * This function does not test valid moves, only which space to attempt to move to based on its
      * position.
      * @param x X position of the piece
      * @param y Y position of the piece
-     * @return The grid coordinate of the space to snap to. If it is not close enough to any space,
-     * return null.
+     * @return The space the piece is closest to
      */
-    private static Point snapToSpace(float x, float y) {
-        return null;
+    private static Space closestSpace(float x, float y) {
+        return new Space(
+                Math.round((y - (SPACE_WIDTH / 2)) / SPACE_WIDTH),
+                Math.round((x - (SPACE_WIDTH / 2)) / SPACE_WIDTH)
+        );
     }
 
     /**
      * Determine if a move from one space to another is valid.
      * @param beginSpace Space the piece will be moving from
      * @param endSpace Space the piece will be moving to
+     * @param piece The piece doing the move
      * @return True if the move is valid
      */
-    private static boolean isValidMove(Point beginSpace, Point endSpace) {
-        return false;
+    private boolean isValidMove(Space beginSpace, Space endSpace, CheckersPiece  piece) {
+        int rise = endSpace.getRow() - beginSpace.getRow();
+        int run = endSpace.getCol() - beginSpace.getCol();
+        float slope = Math.abs((float)rise / run);
+        Space midSpace = new Space((endSpace.getRow() + beginSpace.getRow()) / 2, (endSpace.getCol() + beginSpace.getCol()) / 2);
+        Team enemyTeam =  piece.getTeam() == Team.GREEN ? Team.WHITE : Team.GREEN;
+
+        return (
+                // Game must be in progress
+                !isComplete
+                // End space must be open
+                && board[endSpace.getRow()][endSpace.getCol()] == null
+                // Slope must be one
+                && Math.abs(slope - 1) < 0.00000001
+                // Validate vertical direction
+                && (piece.isKing() || (piece.getTeam() == Team.GREEN && rise < 0) || (piece.getTeam() == Team.WHITE && rise > 0))
+                // can either move one space or 2 when jumping an apposing piece
+                && ((Math.abs(rise) == 1 && hasMoved == null) || (Math.abs(rise) == 2 && board[midSpace.getRow()][midSpace.getCol()] != null && board[midSpace.getRow()][midSpace.getCol()].getTeam() == enemyTeam) && (hasMoved == null || hasMoved == piece))
+        );
     }
 
     /**
@@ -324,6 +487,7 @@ public class CheckersGame {
     public void reset(Context context) {
         // Set the turn
         teamTurn = Team.GREEN;
+        isComplete = false;
 
         // Set the spaces of all the pieces
         board = new CheckersPiece[][]{
@@ -343,18 +507,22 @@ public class CheckersGame {
 
     /**
      * Setup for views outside this view
-     * @param context Context of this application
      */
-    public void externalSetup(Context context) {
-        setTurnView(context, Team.GREEN);
+    public void externalSetup() {
+        setTurnView(Team.GREEN);
     }
 
     /**
      * Change the display to say who's turn it is
      */
-    private void setTurnView(Context context, Team team) {
-        TextView turnView = (TextView)((Activity) context).findViewById(R.id.turnView);
-        turnView.setText(MessageFormat.format("{0}{1}", team == Team.GREEN ? greenPlayer : whitePlayer, context.getResources().getString(R.string.turn_suffix)));
+    private void setTurnView(Team team) {
+        TextView turnView = (TextView)((Activity) view.getContext()).findViewById(R.id.turnView);
+        turnView.setText(MessageFormat.format("{0}{1}", team == Team.GREEN ? greenPlayer : whitePlayer, view.getContext().getResources().getString(R.string.turn_suffix)));
+    }
+
+    private void setTurnViewWin(Team team) {
+        TextView turnView = (TextView)((Activity) view.getContext()).findViewById(R.id.turnView);
+        turnView.setText(MessageFormat.format("{0} {1}", team == Team.GREEN ? greenPlayer : whitePlayer, view.getContext().getResources().getString(R.string.game_over_suffix)));
     }
 
     /**
@@ -378,8 +546,6 @@ public class CheckersGame {
      * @return relative position of the piece
      */
     private PointF spaceToPos(int row, int col) {
-        float toCenterOfSpace = (1f/SPACE_WIDTH/2);
-        float toNextSpace = (1f/SPACE_WIDTH);
-        return new PointF(toCenterOfSpace + (toNextSpace * col), toCenterOfSpace + (toNextSpace * row));
+        return new PointF((SPACE_WIDTH / 2f) + (SPACE_WIDTH * col), (SPACE_WIDTH / 2f) + (SPACE_WIDTH * row));
     }
 }

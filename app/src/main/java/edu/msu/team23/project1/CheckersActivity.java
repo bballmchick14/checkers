@@ -13,7 +13,7 @@ public class CheckersActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_checkers);
         Intent intent = getIntent();
-        getCheckersView().externalSetup(this);
+        getCheckersView().externalSetup();
     }
 
     /**
@@ -34,6 +34,10 @@ public class CheckersActivity extends AppCompatActivity {
     }
 
     public void onDone(View view) {
-        getCheckersView().onDone(this);
+        getCheckersView().onDone();
+    }
+
+    public void onResign(View view) {
+        getCheckersView().onResign();
     }
 }

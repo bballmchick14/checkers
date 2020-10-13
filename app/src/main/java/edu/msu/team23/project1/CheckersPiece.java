@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Point;
 import android.graphics.PointF;
 
 import java.io.Serializable;
@@ -139,8 +138,8 @@ public class CheckersPiece implements Serializable {
      * Toggle this pieces king status
      * @param context Context of the application
      */
-    public void toggleKing(Context context) {
-        isKing = !isKing;
+    public void makeKing(Context context) {
+        isKing = true;
         updateImage(context);
     }
 
@@ -187,5 +186,13 @@ public class CheckersPiece implements Serializable {
      */
     public CheckersGame.Team getTeam() {
         return team;
+    }
+
+    /**
+     * Getter for this piece's king status
+     * @return This piece's king status
+     */
+    public boolean isKing() {
+        return isKing;
     }
 }

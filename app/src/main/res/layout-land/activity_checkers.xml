@@ -69,6 +69,7 @@
             android:id="@+id/resignButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:onClick="onResign"
             android:text="@string/resign"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

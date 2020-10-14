@@ -14,5 +14,7 @@
     <string name="must_move_title">Make a Move</string>
     <string name="must_move_message">You must make a move before you end your turn!</string>
     <string name="game_over_title">Game Over!</string>
-    <string name="game_over_suffix">wins!</string>
+    <string name="game_over_win_suffix">wins!</string>
+    <string name="menu_button">Menu</string>
+    <string name="game_over_lose_suffix">loses!</string>
 </resources>

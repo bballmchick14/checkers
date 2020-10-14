@@ -3,6 +3,7 @@ package edu.msu.team23.project1;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -333,28 +334,18 @@ public class CheckersGame {
 
     /**
      * Handle a team winning the game
-     * @param team The team that won the game
+     * @param winner The team that won the game
      */
-    public void handleWin(Team team) {
-        if (team != null) {
+    public void handleWin(Team winner) {
+        if (winner != null) {
             isComplete = true;
             returnPiece();
             releasePiece();
 
-            setTurnViewWin(team);
-
-            //
-            // Dialog for
-            //
-            String winnerName = team == Team.GREEN ? greenPlayer : whitePlayer;
-            AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
-            // Parameterize the builder
-            builder.setTitle(R.string.game_over_title);
-            builder.setMessage(winnerName + " " + view.getContext().getResources().getString(R.string.game_over_suffix));
-            builder.setPositiveButton(android.R.string.ok, null);
-            // Create the dialog box and show it
-            AlertDialog alertDialog = builder.create();
-            alertDialog.show();
+            Intent intent = new Intent((Activity)view.getContext(), GameOverActivity.class);
+            intent.putExtra(CheckersActivity.WINNER, winner == Team.GREEN ? greenPlayer : whitePlayer);
+            intent.putExtra(CheckersActivity.LOSER, winner == Team.GREEN ? whitePlayer : greenPlayer);
+            ((Activity)view.getContext()).startActivity(intent);
         }
     }
 
@@ -518,11 +509,6 @@ public class CheckersGame {
     private void setTurnView(Team team) {
         TextView turnView = (TextView)((Activity) view.getContext()).findViewById(R.id.turnView);
         turnView.setText(MessageFormat.format("{0}{1}", team == Team.GREEN ? greenPlayer : whitePlayer, view.getContext().getResources().getString(R.string.turn_suffix)));
-    }
-
-    private void setTurnViewWin(Team team) {
-        TextView turnView = (TextView)((Activity) view.getContext()).findViewById(R.id.turnView);
-        turnView.setText(MessageFormat.format("{0} {1}", team == Team.GREEN ? greenPlayer : whitePlayer, view.getContext().getResources().getString(R.string.game_over_suffix)));
     }
 
     /**

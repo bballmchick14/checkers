@@ -2,17 +2,17 @@ package edu.msu.team23.project1;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
 public class CheckersActivity extends AppCompatActivity {
+    public static final String WINNER = "WINNER";
+    public static final String LOSER = "LOSER";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_checkers);
-        Intent intent = getIntent();
         getCheckersView().externalSetup();
     }
 

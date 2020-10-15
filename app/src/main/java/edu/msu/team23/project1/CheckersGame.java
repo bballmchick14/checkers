@@ -103,6 +103,11 @@ public class CheckersGame {
     private CheckersPiece hasMoved;
 
     /**
+     * Has the current turn had a move of one space
+     */
+    private boolean hasSingleMoved;
+
+    /**
      * Is the game complete?
      */
     private boolean isComplete;
@@ -220,6 +225,11 @@ public class CheckersGame {
                 // Move the piece to the correct relative position
                 PointF snapPos = spaceToPos(closestSpace.getRow(), closestSpace.getCol());
                 draggingPiece.setPosition(snapPos.x, snapPos.y);
+
+                // If move is only one space, save state of hasSingleMoved
+                if (Math.abs(closestSpace.getRow() - draggingSpace.getRow()) == 1) {
+                    hasSingleMoved = true;
+                }
 
                 // If a piece was jumped, remove the jumped piece
                 if (Math.abs(closestSpace.getRow() - draggingSpace.getRow()) == 2) {
@@ -364,6 +374,7 @@ public class CheckersGame {
     public void nextTurn() {
         if (!isComplete) {
             if (hasMoved != null) {
+                hasSingleMoved = false;
                 teamTurn = teamTurn == Team.GREEN ? Team.WHITE : Team.GREEN;
                 setTurnView(teamTurn);
                 hasMoved = null;
@@ -468,7 +479,7 @@ public class CheckersGame {
                 // Validate vertical direction
                 && (piece.isKing() || (piece.getTeam() == Team.GREEN && rise < 0) || (piece.getTeam() == Team.WHITE && rise > 0))
                 // can either move one space or 2 when jumping an apposing piece
-                && ((Math.abs(rise) == 1 && hasMoved == null) || (Math.abs(rise) == 2 && board[midSpace.getRow()][midSpace.getCol()] != null && board[midSpace.getRow()][midSpace.getCol()].getTeam() == enemyTeam) && (hasMoved == null || hasMoved == piece))
+                && ((Math.abs(rise) == 1 && hasMoved == null) || (Math.abs(rise) == 2 && board[midSpace.getRow()][midSpace.getCol()] != null && board[midSpace.getRow()][midSpace.getCol()].getTeam() == enemyTeam) && (hasMoved == null || (hasMoved == piece && !hasSingleMoved)))
         );
     }
 

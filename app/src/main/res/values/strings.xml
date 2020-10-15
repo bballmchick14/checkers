@@ -17,4 +17,5 @@
     <string name="game_over_win_suffix">wins!</string>
     <string name="menu_button">Menu</string>
     <string name="game_over_lose_suffix">loses!</string>
+    <string name="invalid_move">That\'s an invalid move!</string>
 </resources>

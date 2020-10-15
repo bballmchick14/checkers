@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.text.MessageFormat;
 
@@ -246,6 +247,11 @@ public class CheckersGame {
             } else {
                 // Reset the piece's position to it's original space
                 returnPiece();
+
+                //present toast for invalid move
+                Toast.makeText(view.getContext(),
+                        R.string.invalid_move,
+                        Toast.LENGTH_SHORT).show();
             }
             // Let go of the piece
             releasePiece();

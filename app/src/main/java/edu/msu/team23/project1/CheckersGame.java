@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.text.MessageFormat;
 
@@ -101,6 +102,11 @@ public class CheckersGame {
      * Piece that has moved this turn
      */
     private CheckersPiece hasMoved;
+
+    /**
+     * Has the current turn had a move of one space
+     */
+    private boolean hasSingleMoved;
 
     /**
      * Is the game complete?
@@ -221,6 +227,11 @@ public class CheckersGame {
                 PointF snapPos = spaceToPos(closestSpace.getRow(), closestSpace.getCol());
                 draggingPiece.setPosition(snapPos.x, snapPos.y);
 
+                // If move is only one space, save state of hasSingleMoved
+                if (Math.abs(closestSpace.getRow() - draggingSpace.getRow()) == 1) {
+                    hasSingleMoved = true;
+                }
+
                 // If a piece was jumped, remove the jumped piece
                 if (Math.abs(closestSpace.getRow() - draggingSpace.getRow()) == 2) {
                     board[(closestSpace.getRow() + draggingSpace.getRow()) / 2][(closestSpace.getCol() + draggingSpace.getCol()) / 2] = null;
@@ -236,6 +247,11 @@ public class CheckersGame {
             } else {
                 // Reset the piece's position to it's original space
                 returnPiece();
+
+                //present toast for invalid move
+                Toast.makeText(view.getContext(),
+                        R.string.invalid_move,
+                        Toast.LENGTH_SHORT).show();
             }
             // Let go of the piece
             releasePiece();
@@ -364,6 +380,7 @@ public class CheckersGame {
     public void nextTurn() {
         if (!isComplete) {
             if (hasMoved != null) {
+                hasSingleMoved = false;
                 teamTurn = teamTurn == Team.GREEN ? Team.WHITE : Team.GREEN;
                 setTurnView(teamTurn);
                 hasMoved = null;
@@ -468,7 +485,7 @@ public class CheckersGame {
                 // Validate vertical direction
                 && (piece.isKing() || (piece.getTeam() == Team.GREEN && rise < 0) || (piece.getTeam() == Team.WHITE && rise > 0))
                 // can either move one space or 2 when jumping an apposing piece
-                && ((Math.abs(rise) == 1 && hasMoved == null) || (Math.abs(rise) == 2 && board[midSpace.getRow()][midSpace.getCol()] != null && board[midSpace.getRow()][midSpace.getCol()].getTeam() == enemyTeam) && (hasMoved == null || hasMoved == piece))
+                && ((Math.abs(rise) == 1 && hasMoved == null) || (Math.abs(rise) == 2 && board[midSpace.getRow()][midSpace.getCol()] != null && board[midSpace.getRow()][midSpace.getCol()].getTeam() == enemyTeam) && (hasMoved == null || (hasMoved == piece && !hasSingleMoved)))
         );
     }
 

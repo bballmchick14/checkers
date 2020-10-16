@@ -2,6 +2,7 @@ package edu.msu.team23.project1;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -58,5 +59,26 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return validFields;
+    }
+
+    /**
+     * Handler for displaying rules
+     * @param view View the event happened on
+     */
+    public void onRules(View view) {
+        // Rules was selected
+        // Instantiate a dialog box builder
+        AlertDialog.Builder builder =
+                new AlertDialog.Builder(view.getContext());
+
+        // Parameterize the builder
+        builder.setTitle(R.string.rules_title);
+        builder.setMessage(R.string.rules);
+        builder.setPositiveButton(android.R.string.ok, null);
+
+        // Create the dialog box and show it
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+
     }
 }

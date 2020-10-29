@@ -14,6 +14,11 @@ import android.view.View;
  */
 public class CheckersView extends View {
     /**
+     * Bundle key for storing the game
+     */
+    private static final String CHECKERS_GAME = "CheckersView.checkersGame";
+
+    /**
      * Checkers game for this view
      */
     private CheckersGame checkersGame;
@@ -58,7 +63,7 @@ public class CheckersView extends View {
      * @param bundle The bundle we save to
      */
     public void saveInstanceState(Bundle bundle) {
-
+        bundle.putSerializable(CHECKERS_GAME, checkersGame);
     }
 
     /**
@@ -66,7 +71,10 @@ public class CheckersView extends View {
      * @param bundle The bundle we save to
      */
     public void loadInstanceState(Bundle bundle) {
-
+        checkersGame = (CheckersGame)bundle.getSerializable(CHECKERS_GAME);
+        if (checkersGame != null) {
+            checkersGame.restoreTransientData(this);
+        }
     }
 
     /**

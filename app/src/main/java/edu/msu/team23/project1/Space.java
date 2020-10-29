@@ -1,6 +1,8 @@
 package edu.msu.team23.project1;
 
-public class Space {
+import java.io.Serializable;
+
+public class Space implements Serializable {
     private int row;
     private int col;
 

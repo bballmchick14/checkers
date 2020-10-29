@@ -8,19 +8,19 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.PointF;
-import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.Serializable;
 import java.text.MessageFormat;
 
-public class CheckersGame {
+public class CheckersGame implements Serializable {
     /**
      * Enumeration for the teams in the game
      */
-    enum Team {
+    enum Team implements Serializable {
         WHITE,
         GREEN
     }
@@ -28,7 +28,7 @@ public class CheckersGame {
     /**
      * Image of the checker board
      */
-    private final Bitmap BOARD_IMAGE;
+    transient private Bitmap boardImage;
 
     /**
      * Number of spaces on a side of the board
@@ -41,17 +41,9 @@ public class CheckersGame {
     private static final float SPACE_WIDTH = 1f / SPACES_ON_SIDE;
 
     /**
-     * Bundle keys for saving and loading state
-     */
-    private static final String CHECKERS_PIECES = "CheckersGame.checkersPieces";
-    private static final String GREEN_PLAYER = "CheckersGame.greenPlayer";
-    private static final String WHITE_PLAYER = "CheckersGame.whitePlayer";
-    private static final String TEAM_TURN = "CheckersGame.teamTurn";
-
-    /**
      * View this checkers game is in
      */
-    private CheckersView view;
+    private transient CheckersView view;
 
     /**
      * Name of the player on the green team
@@ -86,22 +78,27 @@ public class CheckersGame {
     /**
      * Most recent relative X touch when dragging
      */
-    private float lastRelX;
+    private transient float lastRelX;
 
     /**
      * Most recent relative Y touch when dragging
      */
-    private float lastRelY;
+    private transient float lastRelY;
 
     /**
      * Size of the board in pixels
      */
-    private int boardSize;
+    private transient int boardSize;
 
     /**
      * Piece that has moved this turn
      */
-    private CheckersPiece hasMoved;
+    private transient CheckersPiece hasMovedPiece;
+
+    /**
+     * Space of the piece that has moved
+     */
+    private Space hasMovedSpace;
 
     /**
      * Has the current turn had a move of one space
@@ -121,7 +118,7 @@ public class CheckersGame {
      * @param whitePlayer Name of the player on the white team
      */
     public CheckersGame(Context context, CheckersView view, String greenPlayer, String whitePlayer) {
-        BOARD_IMAGE = BitmapFactory.decodeResource(context.getResources(), R.drawable.board);
+        boardImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.board);
         this.greenPlayer = greenPlayer;
         this.whitePlayer = whitePlayer;
         this.view = view;
@@ -137,12 +134,12 @@ public class CheckersGame {
         boardSize = canvas.getWidth();
 
         // Determine where to draw the board and how much to scale it
-        float boardScaleFactor = (float)boardSize / (float)BOARD_IMAGE.getWidth();
+        float boardScaleFactor = (float)boardSize / (float) boardImage.getWidth();
 
         // Draw the board
         canvas.save();
         canvas.scale(boardScaleFactor, boardScaleFactor);
-        canvas.drawBitmap(BOARD_IMAGE, 0, 0, null);
+        canvas.drawBitmap(boardImage, 0, 0, null);
         canvas.restore();
 
         // Draw the pieces
@@ -243,7 +240,8 @@ public class CheckersGame {
                     draggingPiece.makeKing(view.getContext());
                 }
 
-                hasMoved = draggingPiece;
+                hasMovedPiece = draggingPiece;
+                hasMovedSpace = closestSpace;
             } else {
                 // Reset the piece's position to it's original space
                 returnPiece();
@@ -379,11 +377,12 @@ public class CheckersGame {
      */
     public void nextTurn() {
         if (!isComplete) {
-            if (hasMoved != null) {
+            if (hasMovedPiece != null) {
                 hasSingleMoved = false;
                 teamTurn = teamTurn == Team.GREEN ? Team.WHITE : Team.GREEN;
                 setTurnView(teamTurn);
-                hasMoved = null;
+                hasMovedPiece = null;
+                hasMovedSpace = null;
             } else {
                 AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
                 // Parameterize the builder
@@ -431,22 +430,6 @@ public class CheckersGame {
     }
 
     /**
-     * Save the puzzle to a bundle
-     * @param bundle The bundle we save to
-     */
-    public void saveInstanceState(Bundle bundle) {
-
-    }
-
-    /**
-     * Read the puzzle from a bundle
-     * @param bundle The bundle we save to
-     */
-    public void loadInstanceState(Bundle bundle) {
-
-    }
-
-    /**
      * Determine which space a piece is closest to
      * This function does not test valid moves, only which space to attempt to move to based on its
      * position.
@@ -485,7 +468,7 @@ public class CheckersGame {
                 // Validate vertical direction
                 && (piece.isKing() || (piece.getTeam() == Team.GREEN && rise < 0) || (piece.getTeam() == Team.WHITE && rise > 0))
                 // can either move one space or 2 when jumping an apposing piece
-                && ((Math.abs(rise) == 1 && hasMoved == null) || (Math.abs(rise) == 2 && board[midSpace.getRow()][midSpace.getCol()] != null && board[midSpace.getRow()][midSpace.getCol()].getTeam() == enemyTeam) && (hasMoved == null || (hasMoved == piece && !hasSingleMoved)))
+                && ((Math.abs(rise) == 1 && hasMovedPiece == null) || (Math.abs(rise) == 2 && board[midSpace.getRow()][midSpace.getCol()] != null && board[midSpace.getRow()][midSpace.getCol()].getTeam() == enemyTeam) && (hasMovedPiece == null || (hasMovedPiece == piece && !hasSingleMoved)))
         );
     }
 
@@ -550,5 +533,26 @@ public class CheckersGame {
      */
     private PointF spaceToPos(int row, int col) {
         return new PointF((SPACE_WIDTH / 2f) + (SPACE_WIDTH * col), (SPACE_WIDTH / 2f) + (SPACE_WIDTH * row));
+    }
+
+    /**
+     * Restore the transient data after serialization
+     */
+    public void restoreTransientData(CheckersView view) {
+        // Restore transient game data
+        if (view != null) {
+            this.view = view;
+            boardImage = BitmapFactory.decodeResource(view.getContext().getResources(), R.drawable.board);
+        }
+        hasMovedPiece = board[hasMovedSpace.getRow()][hasMovedSpace.getCol()];
+
+        // Restore all the transient data in each piece
+        for (int col = 0; col < board.length; col ++) {
+            for (int row = 0; row < board[col].length; row++) {
+                if (board[row][col] != null) {
+                    board[row][col].restoreTransientData(view.getContext());
+                }
+            }
+        }
     }
 }

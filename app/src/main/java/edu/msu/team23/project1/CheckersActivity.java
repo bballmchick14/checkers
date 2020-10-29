@@ -1,5 +1,6 @@
 package edu.msu.team23.project1;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
@@ -10,10 +11,14 @@ public class CheckersActivity extends AppCompatActivity {
     public static final String LOSER = "LOSER";
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
         setContentView(R.layout.activity_checkers);
         getCheckersView().externalSetup();
+
+        if (bundle != null) {
+            getCheckersView().loadInstanceState(bundle);
+        }
     }
 
     /**
@@ -21,8 +26,9 @@ public class CheckersActivity extends AppCompatActivity {
      * @param bundle the bundle to save into
      */
     @Override
-    protected void onSaveInstanceState(Bundle bundle) {
+    protected void onSaveInstanceState(@NonNull Bundle bundle) {
         super.onSaveInstanceState(bundle);
+        getCheckersView().saveInstanceState(bundle);
     }
 
     /**

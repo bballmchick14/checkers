@@ -165,6 +165,15 @@ public class CheckersPiece implements Serializable {
     }
 
     /**
+     * Restore the transient data
+     * @param context Context of the application
+     */
+    public void restoreTransientData(Context context) {
+        // Load the piece bitmap from the image key
+        image = BitmapFactory.decodeResource(context.getResources(), imageKey.IMAGE_ID);
+    }
+
+    /**
      * Getter for the image of this piece
      * @return The image of this piece
      */

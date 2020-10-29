@@ -544,7 +544,9 @@ public class CheckersGame implements Serializable {
             this.view = view;
             boardImage = BitmapFactory.decodeResource(view.getContext().getResources(), R.drawable.board);
         }
-        hasMovedPiece = board[hasMovedSpace.getRow()][hasMovedSpace.getCol()];
+        if (hasMovedSpace != null) {
+            hasMovedPiece = board[hasMovedSpace.getRow()][hasMovedSpace.getCol()];
+        }
 
         // Restore all the transient data in each piece
         for (int col = 0; col < board.length; col ++) {

@@ -451,6 +451,8 @@ public class CheckersGame implements Serializable {
         return (
                 // Game must be in progress
                 !isComplete
+                // End space must be on the board
+                && endSpace.getRow() >= 0 && endSpace.getRow() < SPACES_ON_SIDE && endSpace.getCol() >= 0 && endSpace.getCol() < SPACES_ON_SIDE
                 // End space must be open
                 && board[endSpace.getRow()][endSpace.getCol()] == null
                 // Slope must be one

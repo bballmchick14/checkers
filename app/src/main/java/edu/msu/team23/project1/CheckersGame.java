@@ -1,7 +1,6 @@
 package edu.msu.team23.project1;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -28,7 +27,7 @@ public class CheckersGame implements Serializable {
     /**
      * Image of the checker board
      */
-    transient private Bitmap boardImage;
+    private transient Bitmap boardImage;
 
     /**
      * Number of spaces on a side of the board
@@ -247,9 +246,7 @@ public class CheckersGame implements Serializable {
                 returnPiece();
 
                 //present toast for invalid move
-                Toast.makeText(view.getContext(),
-                        R.string.invalid_move,
-                        Toast.LENGTH_SHORT).show();
+                Toast.makeText(view.getContext(), R.string.invalid_move, Toast.LENGTH_SHORT).show();
             }
             // Let go of the piece
             releasePiece();
@@ -331,7 +328,7 @@ public class CheckersGame implements Serializable {
     /**
      * Return the currently dragging piece to it's space before dragging
      */
-    private void returnPiece() {
+    public void returnPiece() {
         if (draggingPiece != null) {
             PointF originalPos = spaceToPos(draggingSpace.getRow(), draggingSpace.getCol());
             draggingPiece.setPosition(originalPos.x, originalPos.y);
@@ -341,7 +338,7 @@ public class CheckersGame implements Serializable {
     /**
      * Let go of the piece
      */
-    private void releasePiece() {
+    public void releasePiece() {
         draggingPiece = null;
         draggingSpace = null;
     }
@@ -384,14 +381,7 @@ public class CheckersGame implements Serializable {
                 hasMovedPiece = null;
                 hasMovedSpace = null;
             } else {
-                AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
-                // Parameterize the builder
-                builder.setTitle(R.string.must_move_title);
-                builder.setMessage(R.string.must_move_message);
-                builder.setPositiveButton(android.R.string.ok, null);
-                // Create the dialog box and show it
-                AlertDialog alertDialog = builder.create();
-                alertDialog.show();
+                Toast.makeText(view.getContext(), R.string.must_move_message, Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -539,22 +529,22 @@ public class CheckersGame implements Serializable {
      * Restore the transient data after serialization
      */
     public void restoreTransientData(CheckersView view) {
-        // Restore transient game data
         if (view != null) {
             this.view = view;
             boardImage = BitmapFactory.decodeResource(view.getContext().getResources(), R.drawable.board);
-        }
-        if (hasMovedSpace != null) {
-            hasMovedPiece = board[hasMovedSpace.getRow()][hasMovedSpace.getCol()];
-        }
 
-        // Restore all the transient data in each piece
-        for (int col = 0; col < board.length; col ++) {
-            for (int row = 0; row < board[col].length; row++) {
-                if (board[row][col] != null) {
-                    board[row][col].restoreTransientData(view.getContext());
+            // Restore all the transient data in each piece
+            for (int col = 0; col < board.length; col ++) {
+                for (int row = 0; row < board[col].length; row++) {
+                    if (board[row][col] != null) {
+                        board[row][col].restoreTransientData(view.getContext());
+                    }
                 }
             }
+        }
+
+        if (hasMovedSpace != null) {
+            hasMovedPiece = board[hasMovedSpace.getRow()][hasMovedSpace.getCol()];
         }
     }
 }

@@ -63,6 +63,9 @@ public class CheckersView extends View {
      * @param bundle The bundle we save to
      */
     public void saveInstanceState(Bundle bundle) {
+        // Release and return the piece in case it was being dragged
+        checkersGame.returnPiece();
+        checkersGame.releasePiece();
         bundle.putSerializable(CHECKERS_GAME, checkersGame);
     }
 
@@ -71,7 +74,7 @@ public class CheckersView extends View {
      * @param bundle The bundle we save to
      */
     public void loadInstanceState(Bundle bundle) {
-        checkersGame = (CheckersGame)bundle.getSerializable(CHECKERS_GAME);
+        bundle.getSerializable(CHECKERS_GAME);
         if (checkersGame != null) {
             checkersGame.restoreTransientData(this);
         }

@@ -19,7 +19,7 @@
     <string name="invalid_move">That\'s an invalid move!</string>
     <string name="rules_title">How To Play</string>
     <string name="rules_button">How To Play</string>
-    <string name="rules">Checkers is played by two opponents, on opposite sides of the gameboard.
+    <string name="rules">Checkers is played by two opponents, on opposite sides of the game board.
         One player has the green pieces; the other has the white pieces. Players alternate turns.
         A player may not move an opponent\'s piece. A move consists of moving a piece diagonally to
         an adjacent unoccupied square. If the adjacent square contains an opponent\'s piece, and

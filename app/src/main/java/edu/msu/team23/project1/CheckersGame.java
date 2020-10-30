@@ -15,9 +15,12 @@ import android.widget.Toast;
 import java.io.Serializable;
 import java.text.MessageFormat;
 
+/**
+ * Class for handling the state of the checkers game.
+ */
 public class CheckersGame implements Serializable {
     /**
-     * Enumeration for the teams in the game
+     * Enumeration for the teams in the game.
      */
     enum Team implements Serializable {
         WHITE,
@@ -25,34 +28,19 @@ public class CheckersGame implements Serializable {
     }
 
     /**
-     * Image of the checker board
-     */
-    private transient Bitmap boardImage;
-
-    /**
-     * Number of spaces on a side of the board
+     * Number of spaces on a side of the board.
      */
     private static final int SPACES_ON_SIDE = 8;
 
     /**
-     * Relative width of a space
+     * Relative width of a space.
      */
     private static final float SPACE_WIDTH = 1f / SPACES_ON_SIDE;
 
     /**
-     * View this checkers game is in
+     * View this checkers game is in.
      */
     private transient CheckersView view;
-
-    /**
-     * Name of the player on the green team
-     */
-    private String greenPlayer;
-
-    /**
-     * Name of the player on the white team
-     */
-    private String whitePlayer;
 
     /**
      * Name of the player whose turn it is.
@@ -60,47 +48,24 @@ public class CheckersGame implements Serializable {
     private Team teamTurn;
 
     /**
+     * Name of the player on the green team.
+     */
+    private final String greenPlayer;
+
+    /**
+     * Name of the player on the white team.
+     */
+    private final String whitePlayer;
+
+    /**
      * Representation of the game board.
+     * Each position has a CheckersPiece object if there is a piece present
+     * and null if the space is empty.
      */
     private CheckersPiece[][] board;
 
     /**
-     * The checkers piece being dragged. If we are not dragging, the variable is null
-     */
-    private CheckersPiece draggingPiece = null;
-
-    /**
-     * The space the dragging piece came from, if there is no dragging piece, the variable will be null
-     */
-    private Space draggingSpace = null;
-
-    /**
-     * Most recent relative X touch when dragging
-     */
-    private transient float lastRelX;
-
-    /**
-     * Most recent relative Y touch when dragging
-     */
-    private transient float lastRelY;
-
-    /**
-     * Size of the board in pixels
-     */
-    private transient int boardSize;
-
-    /**
-     * Piece that has moved this turn
-     */
-    private transient CheckersPiece hasMovedPiece;
-
-    /**
-     * Space of the piece that has moved
-     */
-    private Space hasMovedSpace;
-
-    /**
-     * Has the current turn had a move of one space
+     * Has the current turn had a move of one space?
      */
     private boolean hasSingleMoved;
 
@@ -110,22 +75,68 @@ public class CheckersGame implements Serializable {
     private boolean isComplete;
 
     /**
-     * Constructor foe the CheckersGame class
+     * Space of the piece that has moved.
+     * If no piece has moved this turn, the variable is null.
+     */
+    private Space hasMovedSpace;
+
+    /**
+     * Piece that has moved this turn.
+     * If no piece has moved this turn, the variable is null.
+     */
+    private transient CheckersPiece hasMovedPiece;
+
+    /**
+     * The checkers piece being dragged. If we are not dragging, the variable is null.
+     */
+    private CheckersPiece draggingPiece = null;
+
+    /**
+     * The space the dragging piece came from.
+     * If there is no dragging piece, the variable is null.
+     */
+    private Space draggingSpace = null;
+
+    /**
+     * Most recent relative X touch when dragging.
+     */
+    private transient float lastRelX;
+
+    /**
+     * Most recent relative Y touch when dragging.
+     */
+    private transient float lastRelY;
+
+    /**
+     * Image of the checker board.
+     */
+    private transient Bitmap boardImage;
+
+    /**
+     * Side length of the board in pixels.
+     */
+    private transient int boardSize;
+
+    /**
+     * Constructor foe the CheckersGame class.
      * @param context Application context
      * @param view View this game is a part of
      * @param greenPlayer Name of the player on the green team
      * @param whitePlayer Name of the player on the white team
      */
     public CheckersGame(Context context, CheckersView view, String greenPlayer, String whitePlayer) {
+        // Instantiate member variables
         boardImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.board);
         this.greenPlayer = greenPlayer;
         this.whitePlayer = whitePlayer;
         this.view = view;
+
+        // Reset the game to the initial state
         reset(context);
     }
 
     /**
-     * Draws the checkers game
+     * Draws the checkers game.
      * @param canvas Canvas to draw on
      */
     public void draw(Canvas canvas) {
@@ -160,7 +171,7 @@ public class CheckersGame implements Serializable {
      * Handle a touch event from the view.
      * @param view The view that is the source of the touch
      * @param event The motion event describing the touch
-     * @return true if the touch is handled.
+     * @return true if the touch is handled
      */
     public boolean onTouchEvent(View view, MotionEvent event) {
         // Convert an x,y location to a relative location on the board
@@ -170,7 +181,7 @@ public class CheckersGame implements Serializable {
         // Delegate work to corresponding function
         switch(event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
-                return onTouched(view, relX, relY);
+                return onTouched(relX, relY);
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 return onReleased(view, relX, relY);
@@ -181,13 +192,14 @@ public class CheckersGame implements Serializable {
     }
 
     /**
-     * Handle a touch message. This is when we get an initial touch
-     * @param view The view that is the source of the touch
-     * @param x x location for the touch, relative to the game - 0 to 1 over the game
-     * @param y y location for the touch, relative to the game - 0 to 1 over the game
+     * Handle a touch message.
+     * @param x X location for the touch, relative to the game - 0 to 1 over the game
+     * @param y Y location for the touch, relative to the game - 0 to 1 over the game
      * @return true if the touch is handled
      */
-    private boolean onTouched(View view, float x, float y) {
+    private boolean onTouched(float x, float y) {
+        // If the game is still in progress, search for a piece in that was hit by the touch.
+        // If a piece got hit, grab it.
         if (!isComplete) {
             for (int row = 0; row < board.length; row++) {
                 for (int col = 0; col < board[row].length; col++) {
@@ -206,13 +218,17 @@ public class CheckersGame implements Serializable {
 
     /**
      * Handle a release of a touch message.
+     * @param view The view that is the source of the touch
      * @param x x location for the touch release, relative to the game - 0 to 1 over the game
      * @param y y location for the touch release, relative to the game - 0 to 1 over the game
      * @return true if the touch is handled
      */
     private boolean onReleased(View view, float x, float y) {
         if (draggingPiece != null) {
+            // Find the closest space to the release point to determine where the piece might snap
+            // to if the move is valid
             Space closestSpace = closestSpace(x, y);
+
             // Do the move if it is valid
             if (isValidMove(draggingSpace, closestSpace, draggingPiece)) {
                 // Move the piece to the new space
@@ -239,13 +255,14 @@ public class CheckersGame implements Serializable {
                     draggingPiece.makeKing(view.getContext());
                 }
 
+                // Store info about the piece that moved for future move validation
                 hasMovedPiece = draggingPiece;
                 hasMovedSpace = closestSpace;
             } else {
                 // Reset the piece's position to it's original space
                 returnPiece();
 
-                //present toast for invalid move
+                // Present a toast for an invalid move
                 Toast.makeText(view.getContext(), R.string.invalid_move, Toast.LENGTH_SHORT).show();
             }
             // Let go of the piece
@@ -262,6 +279,7 @@ public class CheckersGame implements Serializable {
 
     /**
      * Handle a move message.
+     * @param view The view that is the source of the touch
      * @param relX Most recent relative X touch when dragging
      * @param relY Most recent relative Y touch when dragging
      * @return true if the touch is handled
@@ -275,7 +293,7 @@ public class CheckersGame implements Serializable {
             Bitmap image = draggingPiece.getImage();
             // Scale factor of the piece
             float scaleFactor = (float)boardSize / (float)image.getWidth() / 8;
-            // Size of half od the piece in pixels
+            // Size of half of the piece in pixels
             int halfPieceSize = (int)(draggingPiece.getImage().getWidth() * scaleFactor / 2);
             // Relative position of the piece
             PointF pieceRelPos = draggingPiece.getRelPos();
@@ -289,7 +307,7 @@ public class CheckersGame implements Serializable {
 
             //
             // Determine if the proposed move will move the piece off the board in X and Y directions.
-            // If it will go off the board, don't let it, otherwise move as normal.
+            // If it will go off the board, don't let it. Otherwise move as normal.
             //
             if (pendingNewX - halfPieceSize < 0) {
                 dx = 0;
@@ -326,7 +344,7 @@ public class CheckersGame implements Serializable {
     }
 
     /**
-     * Return the currently dragging piece to it's space before dragging
+     * Return the currently dragging piece to it's space before dragging.
      */
     public void returnPiece() {
         if (draggingPiece != null) {
@@ -336,7 +354,7 @@ public class CheckersGame implements Serializable {
     }
 
     /**
-     * Let go of the piece
+     * Let go of the piece.
      */
     public void releasePiece() {
         draggingPiece = null;
@@ -344,50 +362,7 @@ public class CheckersGame implements Serializable {
     }
 
     /**
-     * Handle a team winning the game
-     * @param winner The team that won the game
-     */
-    public void handleWin(Team winner) {
-        if (winner != null) {
-            isComplete = true;
-            returnPiece();
-            releasePiece();
-
-            Intent intent = new Intent((Activity)view.getContext(), GameOverActivity.class);
-            intent.putExtra(CheckersActivity.WINNER, winner == Team.GREEN ? greenPlayer : whitePlayer);
-            intent.putExtra(CheckersActivity.LOSER, winner == Team.GREEN ? whitePlayer : greenPlayer);
-            ((Activity)view.getContext()).startActivity(intent);
-        }
-    }
-
-    /**
-     * Handle a player resigning the game
-     */
-    public void handleResign() {
-        if (!isComplete) {
-            handleWin(teamTurn == Team.GREEN ? Team.WHITE : Team.GREEN);
-        }
-    }
-
-    /**
-     * Handles advancing to the next player's turn
-     */
-    public void nextTurn() {
-        if (!isComplete) {
-            if (hasMovedPiece != null) {
-                hasSingleMoved = false;
-                teamTurn = teamTurn == Team.GREEN ? Team.WHITE : Team.GREEN;
-                setTurnView(teamTurn);
-                hasMovedPiece = null;
-                hasMovedSpace = null;
-            } else {
-                Toast.makeText(view.getContext(), R.string.must_move_message, Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    /**
-     * Determines if a player has won the game
+     * Determines if a player has won the game.
      * @return Team that won, null otherwise
      */
     public Team hasWon() {
@@ -420,7 +395,50 @@ public class CheckersGame implements Serializable {
     }
 
     /**
-     * Determine which space a piece is closest to
+     * Handle a team winning the game.
+     * @param winner The team that won the game
+     */
+    public void handleWin(Team winner) {
+        if (winner != null) {
+            isComplete = true;
+            returnPiece();
+            releasePiece();
+
+            Intent intent = new Intent((Activity)view.getContext(), GameOverActivity.class);
+            intent.putExtra(CheckersActivity.WINNER, winner == Team.GREEN ? greenPlayer : whitePlayer);
+            intent.putExtra(CheckersActivity.LOSER, winner == Team.GREEN ? whitePlayer : greenPlayer);
+            ((Activity)view.getContext()).startActivity(intent);
+        }
+    }
+
+    /**
+     * Handle a player resigning the game.
+     */
+    public void handleResign() {
+        if (!isComplete) {
+            handleWin(teamTurn == Team.GREEN ? Team.WHITE : Team.GREEN);
+        }
+    }
+
+    /**
+     * Handles advancing to the next player's turn.
+     */
+    public void nextTurn() {
+        if (!isComplete) {
+            if (hasMovedPiece != null) {
+                hasSingleMoved = false;
+                teamTurn = teamTurn == Team.GREEN ? Team.WHITE : Team.GREEN;
+                setTurnView(teamTurn);
+                hasMovedPiece = null;
+                hasMovedSpace = null;
+            } else {
+                Toast.makeText(view.getContext(), R.string.must_move_message, Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    /**
+     * Determine which space a piece is closest to.
      * This function does not test valid moves, only which space to attempt to move to based on its
      * position.
      * @param x X position of the piece
@@ -432,6 +450,16 @@ public class CheckersGame implements Serializable {
                 Math.round((y - (SPACE_WIDTH / 2)) / SPACE_WIDTH),
                 Math.round((x - (SPACE_WIDTH / 2)) / SPACE_WIDTH)
         );
+    }
+
+    /**
+     * Generate a relative position on the screen based on the space the piece is in
+     * @param row Row of the space
+     * @param col Column of the space
+     * @return relative position of the piece
+     */
+    private PointF spaceToPos(int row, int col) {
+        return new PointF((SPACE_WIDTH / 2f) + (SPACE_WIDTH * col), (SPACE_WIDTH / 2f) + (SPACE_WIDTH * row));
     }
 
     /**
@@ -465,7 +493,8 @@ public class CheckersGame implements Serializable {
     }
 
     /**
-     * Reset the game to its initial state
+     * Reset the game to its initial state.
+     * @param context Context of the application
      */
     public void reset(Context context) {
         // Set the turn
@@ -489,22 +518,7 @@ public class CheckersGame implements Serializable {
     }
 
     /**
-     * Setup for views outside this view
-     */
-    public void externalSetup() {
-        setTurnView(Team.GREEN);
-    }
-
-    /**
-     * Change the display to say who's turn it is
-     */
-    private void setTurnView(Team team) {
-        TextView turnView = (TextView)((Activity) view.getContext()).findViewById(R.id.turnView);
-        turnView.setText(MessageFormat.format("{0}{1}", team == Team.GREEN ? greenPlayer : whitePlayer, view.getContext().getResources().getString(R.string.turn_suffix)));
-    }
-
-    /**
-     * Update the relative position of all the pieces based on their space
+     * Update the relative position of all the pieces based on their space.
      */
     private void setPiecePositions() {
         for (int col = 0; col < board.length; col ++) {
@@ -518,17 +532,22 @@ public class CheckersGame implements Serializable {
     }
 
     /**
-     * Generate a relative position on the screen based on the space the piece is in
-     * @param row Row of the space
-     * @param col Column of the space
-     * @return relative position of the piece
+     * Setup for views outside this view.
      */
-    private PointF spaceToPos(int row, int col) {
-        return new PointF((SPACE_WIDTH / 2f) + (SPACE_WIDTH * col), (SPACE_WIDTH / 2f) + (SPACE_WIDTH * row));
+    public void externalSetup() {
+        setTurnView(Team.GREEN);
     }
 
     /**
-     * Restore the transient data after serialization
+     * Change the display to say who's turn it is.
+     */
+    private void setTurnView(Team team) {
+        TextView turnView = (TextView)((Activity) view.getContext()).findViewById(R.id.turnView);
+        turnView.setText(MessageFormat.format("{0}{1}", team == Team.GREEN ? greenPlayer : whitePlayer, view.getContext().getResources().getString(R.string.turn_suffix)));
+    }
+
+    /**
+     * Restore the transient data after serialization.
      */
     public void restoreTransientData(CheckersView view) {
         if (view != null) {

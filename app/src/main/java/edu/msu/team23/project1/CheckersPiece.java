@@ -8,9 +8,12 @@ import android.graphics.PointF;
 
 import java.io.Serializable;
 
+/**
+ * Class for representing a checkers piece in a checkers game.
+ */
 public class CheckersPiece implements Serializable {
     /**
-     * Enumeration for all the different images that can be used to display a piece
+     * Enumeration for all the different images that can be used to display a piece.
      */
     public enum PieceImage implements Serializable {
         WHITE_MAN(R.drawable.white_man),
@@ -18,22 +21,24 @@ public class CheckersPiece implements Serializable {
         GREEN_MAN(R.drawable.green_man),
         GREEN_KING(R.drawable.green_king);
 
+        /**
+         * ID of the image associated with the type of piece.
+         */
         public final int IMAGE_ID;
 
+        /**
+         * Constructor
+         * @param imageId ID of the image associated with the type of piece.
+         */
         PieceImage(int imageId) {
             IMAGE_ID = imageId;
         }
     }
 
     /**
-     * Distance away from the center of a space to be allowed to snap
+     * Team the piece is on.
      */
-    private static final float SNAP_DISTANCE = 0.05f;
-
-    /**
-     * Image used to display the piece
-     */
-    private CheckersGame.Team team;
+    private final CheckersGame.Team team;
 
     /**
      * Is this piece a king?
@@ -41,29 +46,29 @@ public class CheckersPiece implements Serializable {
     private boolean isKing = false;
 
     /**
-     * Designator for the image this piece should have
+     * Key for the image this piece should have.
      */
     private PieceImage imageKey;
 
     /**
-     * Image this piece has
+     * Image for displaying this piece.
      */
     private transient Bitmap image;
 
     /**
-     * x location.
-     * We use relative x locations in the range 0-1 for the center of the checkers piece
+     * Relative x location of the piece.
+     * Value from 0-1 representing percentage distance the center of the piece is horizontally on the board.
      */
     private float x;
 
     /**
-     * y location
-     * We use relative y locations in the range 0-1 for the center of the checkers piece
+     * Relative y location of the piece.
+     * Value from 0-1 representing percentage distance the center of the piece is vertically on the board.
      */
     private float y;
 
     /**
-     * Constructor for a checkers piece
+     * Constructor for a checkers piece.
      * @param context Context of the application
      * @param team Team the piece is on
      */
@@ -73,7 +78,7 @@ public class CheckersPiece implements Serializable {
     }
 
     /**
-     * Draw the checkers piece
+     * Draw the checkers piece.
      * @param canvas Canvas to draw on
      * @param boardSize size of the board
      */
@@ -93,7 +98,7 @@ public class CheckersPiece implements Serializable {
     }
 
     /**
-     * Test to see if we have touched a checkers piece
+     * Test to see if a relative location is on the piece.
      * @param testX X location as a normalized coordinate (0 to 1)
      * @param testY Y location as a normalized coordinate (0 to 1)
      * @param boardSize the size of the puzzle in pixels
@@ -115,7 +120,7 @@ public class CheckersPiece implements Serializable {
     }
 
     /**
-     * Move the checkers piece by dx, dy
+     * Move the checkers piece by dx, dy.
      * @param dx x amount to move
      * @param dy y amount to move
      */
@@ -125,7 +130,7 @@ public class CheckersPiece implements Serializable {
     }
 
     /**
-     * Set the position of the piece
+     * Set the position of the piece.
      * @param x New x position of the piece
      * @param y New y position of the piece
      */
@@ -135,7 +140,7 @@ public class CheckersPiece implements Serializable {
     }
 
     /**
-     * Toggle this pieces king status
+     * Make this piece a king.
      * @param context Context of the application
      */
     public void makeKing(Context context) {
@@ -144,7 +149,7 @@ public class CheckersPiece implements Serializable {
     }
 
     /**
-     * Update this pieces image based on its team and king status
+     * Update this pieces image based on its team and king status.
      * @param context context of this application
      */
     private void updateImage(Context context) {
@@ -165,7 +170,7 @@ public class CheckersPiece implements Serializable {
     }
 
     /**
-     * Restore the transient data
+     * Restore the transient data.
      * @param context Context of the application
      */
     public void restoreTransientData(Context context) {
@@ -174,7 +179,7 @@ public class CheckersPiece implements Serializable {
     }
 
     /**
-     * Getter for the image of this piece
+     * Getter for the image of this piece.
      * @return The image of this piece
      */
     public Bitmap getImage() {
@@ -182,7 +187,7 @@ public class CheckersPiece implements Serializable {
     }
 
     /**
-     * Getter for this piece's position
+     * Getter for this piece's position.
      * @return This piece's position
      */
     public PointF getRelPos() {
@@ -190,7 +195,7 @@ public class CheckersPiece implements Serializable {
     }
 
     /**
-     * Getter for this piece's team
+     * Getter for this piece's team.
      * @return This pieces team
      */
     public CheckersGame.Team getTeam() {
@@ -198,7 +203,7 @@ public class CheckersPiece implements Serializable {
     }
 
     /**
-     * Getter for this piece's king status
+     * Getter for this piece's king status.
      * @return This piece's king status
      */
     public boolean isKing() {

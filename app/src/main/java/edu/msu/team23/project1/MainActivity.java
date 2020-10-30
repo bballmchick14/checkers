@@ -8,9 +8,19 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 
+/**
+ * Activity for displaying the main menu.
+ */
 public class MainActivity extends AppCompatActivity {
-    public static final String GREEN_PLAYER = "GREEN_PLAYER";
-    public static final String WHITE_PLAYER = "WHITE_PLAYER";
+    /**
+     * Intent extra key for the green player's name.
+     */
+    public static final String GREEN_PLAYER = "MainActivity.greenPlayer";
+
+    /**
+     * Intent extra key for the white player's name.
+     */
+    public static final String WHITE_PLAYER = "MainActivity.whitePlayer";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Handler for starting the checkers game activity
+     * Handler for starting the checkers game activity.
      * @param view View the event happened on
      */
     public void onStartGame(View view) {
@@ -35,7 +45,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Determine if the entries in the fields on the main activity are valid
+     * Determine if the entries in the fields on the main activity are valid.
+     * @param greenPlayer The edit text view where the green player's name is entered
+     * @param whitePlayer The edit text view where the white player's name is entered
      * @return True if the entries in the fields on the main activity are valid
      */
     private boolean areFieldsValid(EditText greenPlayer, EditText whitePlayer) {
@@ -62,14 +74,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Handler for displaying rules
+     * Handler for displaying rules.
      * @param view View the event happened on
      */
     public void onRules(View view) {
         // Rules was selected
         // Instantiate a dialog box builder
-        AlertDialog.Builder builder =
-                new AlertDialog.Builder(view.getContext());
+        AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
 
         // Parameterize the builder
         builder.setTitle(R.string.rules_title);
@@ -79,6 +90,5 @@ public class MainActivity extends AppCompatActivity {
         // Create the dialog box and show it
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
-
     }
 }

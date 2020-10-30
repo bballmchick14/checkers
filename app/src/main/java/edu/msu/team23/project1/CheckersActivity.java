@@ -6,6 +6,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 
+/**
+ * Activity for displaying the play area and controls of a checkers game.
+ */
 public class CheckersActivity extends AppCompatActivity {
     public static final String WINNER = "WINNER";
     public static final String LOSER = "LOSER";
@@ -21,10 +24,6 @@ public class CheckersActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Save the instance state into a bundle
-     * @param bundle the bundle to save into
-     */
     @Override
     protected void onSaveInstanceState(@NonNull Bundle bundle) {
         super.onSaveInstanceState(bundle);
@@ -32,17 +31,25 @@ public class CheckersActivity extends AppCompatActivity {
     }
 
     /**
-     * Get the checkers view
+     * Get the checkers view.
      * @return CheckersView reference
      */
     private CheckersView getCheckersView() {
         return (CheckersView)findViewById(R.id.checkersView);
     }
 
+    /**
+     * Button handler for the done button.
+     * @param view View the button was in
+     */
     public void onDone(View view) {
         getCheckersView().onDone();
     }
 
+    /**
+     * Button handler for the resign button.
+     * @param view View the button was in
+     */
     public void onResign(View view) {
         getCheckersView().onResign();
     }

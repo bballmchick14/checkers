@@ -9,6 +9,9 @@ import android.widget.TextView;
 
 import java.text.MessageFormat;
 
+/**
+ * Activity for displaying the game over screen.
+ */
 public class GameOverActivity extends AppCompatActivity {
 
     @Override
@@ -20,9 +23,13 @@ public class GameOverActivity extends AppCompatActivity {
         ((TextView)findViewById(R.id.loserText)).setText(MessageFormat.format("{0} {1}", intent.getStringExtra(CheckersActivity.LOSER), getResources().getString(R.string.game_over_lose_suffix)));
     }
 
-    @Override
-    public void onBackPressed() {
-        backToMenu();
+    /**
+     * Send the application back to the main menu.
+     */
+    private void backToMenu() {
+        Intent intent= new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
     }
 
     /**
@@ -33,9 +40,8 @@ public class GameOverActivity extends AppCompatActivity {
         backToMenu();
     }
 
-    private void backToMenu() {
-        Intent intent= new Intent(this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(intent);
+    @Override
+    public void onBackPressed() {
+        backToMenu();
     }
 }

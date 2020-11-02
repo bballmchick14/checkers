@@ -10,8 +10,15 @@ import android.view.View;
  * Activity for displaying the play area and controls of a checkers game.
  */
 public class CheckersActivity extends AppCompatActivity {
-    public static final String WINNER = "WINNER";
-    public static final String LOSER = "LOSER";
+    /**
+     * Bundle key for the winner's name.
+     */
+    public static final String WINNER = "CheckersActivity.winner";
+
+    /**
+     * Bundle key for the loser's name.
+     */
+    public static final String LOSER = "CheckersActivity.loser";
 
     @Override
     protected void onCreate(Bundle bundle) {

@@ -1,4 +1,4 @@
-package edu.msu.team23.project1;
+package edu.msu.team23.checkers;
 
 import android.app.Activity;
 import android.content.Context;
@@ -458,7 +458,7 @@ public class CheckersGame implements Serializable {
      * @param col Column of the space
      * @return relative position of the piece
      */
-    private PointF spaceToPos(int row, int col) {
+    private static PointF spaceToPos(int row, int col) {
         return new PointF((SPACE_WIDTH / 2f) + (SPACE_WIDTH * col), (SPACE_WIDTH / 2f) + (SPACE_WIDTH * row));
     }
 
